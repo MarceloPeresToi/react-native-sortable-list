@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
-import {ScrollView, View, StyleSheet, Platform, RefreshControl, ViewPropTypes} from 'react-native';
+import {ScrollView, View, StyleSheet, Platform, RefreshControl, ViewPropTypes, LayoutAnimation} from 'react-native';
 import {shallowEqual, swapArrayElements} from './utils';
 import Row from './Row';
 
@@ -111,7 +111,6 @@ export default class SortableList extends Component {
         });
       });
 
-      
       this.setState({
         animated: false,
         data: nextData,
@@ -119,7 +118,6 @@ export default class SortableList extends Component {
         rowsLayouts: null,
         order: nextOrder
       });
-      
 
     } else if (data && nextData && !shallowEqual(data, nextData)) {
       this.setState({ data: nextData });
@@ -327,6 +325,7 @@ export default class SortableList extends Component {
             contentHeight += layout.height;
             contentWidth += layout.width;
           });
+          LayoutAnimation.configureNext(LayoutAnimation.Presets.spring);
 
           this.setState({
             containerLayout: {x, y, width, height, pageX, pageY},
