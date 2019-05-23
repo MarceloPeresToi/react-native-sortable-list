@@ -99,41 +99,26 @@ export default class SortableList extends Component {
 
   componentWillReceiveProps(nextProps) {
     const {data, order} = this.state;
-    let {data: nextData, order: nextOrder} = nextProps;
-
-    if (data && nextData && Object.keys(data).toString() !== Object.keys(nextData).toString()) {
+    let {data: nextData, order: nextOrder, contentContainerStyle} = nextProps;
+    if ((data && nextData && !shallowEqual(data, nextData)) || (order && nextOrder && !shallowEqual(order, nextOrder))) {
       nextOrder = nextOrder || Object.keys(nextData)
-      uniqueRowKey.id++;
+      this._scrollView.contentContainerStyle = contentContainerStyle;
       this._rowsLayouts = {};
-      nextOrder.forEach((key) => {
-        this._rowsLayouts[key] = new Promise((resolve) => {
-          this._resolveRowLayout[key] = resolve;
-        });
-      });
-
       this.setState({
-        animated: false,
         data: nextData,
-        containerLayout: null,
-        rowsLayouts: null,
-        order: nextOrder
+        order: nextOrder,
+        rowLayouts: null
       });
-
-    } else if (data && nextData && !shallowEqual(data, nextData)) {
-      this.setState({ data: nextData });
-      
-    } else if (order && nextOrder && !shallowEqual(order, nextOrder)) {
-      this.setState({order: nextOrder});
     }
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const {data} = this.state;
-    const {data: prevData} = prevState;
+    // const {data} = this.state;
+    // const {data: prevData} = prevState;
 
-    if (data && prevData && !shallowEqual(data, prevData)) {
-      this._onUpdateLayouts();
-    }
+    // if (data && prevData && !shallowEqual(data, prevData)) {
+    //   this._onUpdateLayouts();
+    // }
   }
 
   scrollBy({dx = 0, dy = 0, animated = false}) {
@@ -210,7 +195,7 @@ export default class SortableList extends Component {
           refreshControl={refreshControl}
           ref={this._onRefScrollView}
           horizontal={horizontal}
-          contentContainerStyle={contentContainerStyle}
+          contentContainerStyle={[styles.contentContainer, contentContainerStyle]}
           scrollEventThrottle={2}
           scrollEnabled={scrollEnabled}
           showsHorizontalScrollIndicator={showsHorizontalScrollIndicator}
@@ -229,15 +214,22 @@ export default class SortableList extends Component {
   _renderRows() {
     const {horizontal, rowActivationTime, sortingEnabled, renderRow} = this.props;
     const {animated, order, data, activeRowKey, releasedRowKey, rowsLayouts} = this.state;
-
-
     let nextX = 0;
     let nextY = 0;
+    let rowWidth = 0;
+    let rowHeight = 0;
+    console.log('rowsLayouts', rowsLayouts)
+    if (rowsLayouts && rowsLayouts[0]) {
+      rowWidth = rowsLayouts[0].width;
+      rowHeight = rowsLayouts[0].height;
+    }
 
     return order.map((key, index) => {
       const style = {[ZINDEX]: 0};
       const location = {x: 0, y: 0};
-
+      if (order && rowsLayouts && order.length > Object.keys(rowsLayouts).length) {
+        rowsLayouts[key] = {x: 0, y: 0, width: rowWidth, height: rowHeight}
+      }
       if (rowsLayouts) {
         if (horizontal) {
           location.x = nextX;
@@ -247,14 +239,11 @@ export default class SortableList extends Component {
           nextY += rowsLayouts[key] ? rowsLayouts[key].height : 0;
         }
       }
-
       const active = activeRowKey === key;
       const released = releasedRowKey === key;
-
       if (active || released) {
         style[ZINDEX] = 100;
       }
-
       return (
         <Row
           key={uniqueRowKey(key)}
@@ -276,7 +265,7 @@ export default class SortableList extends Component {
             data: data[key],
             disabled: !sortingEnabled,
             active,
-            index,
+            index
           })}
         </Row>
       );
@@ -329,7 +318,7 @@ export default class SortableList extends Component {
 
           this.setState({
             containerLayout: {x, y, width, height, pageX, pageY},
-            rowsLayouts: rowsLayoutsByKey,
+            rowsLayouts: this.props.rowsLayoutsByKey || rowsLayoutsByKey,
             headerLayout,
             footerLayout,
             contentHeight,
