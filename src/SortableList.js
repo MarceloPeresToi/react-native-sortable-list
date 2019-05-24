@@ -218,7 +218,6 @@ export default class SortableList extends Component {
     let nextY = 0;
     let rowWidth = 0;
     let rowHeight = 0;
-    console.log('rowsLayouts', rowsLayouts)
     if (rowsLayouts && rowsLayouts[0]) {
       rowWidth = rowsLayouts[0].width;
       rowHeight = rowsLayouts[0].height;
@@ -314,6 +313,7 @@ export default class SortableList extends Component {
             contentHeight += layout.height;
             contentWidth += layout.width;
           });
+
           LayoutAnimation.configureNext(LayoutAnimation.Presets.spring);
 
           this.setState({
